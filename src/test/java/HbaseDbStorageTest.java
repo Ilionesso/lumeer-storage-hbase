@@ -146,23 +146,23 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
       hBaseStorageAdapter.createCollection(COLLECTION_COLLECTION_HAS_DOCUMENT);
 
       String id = hBaseStorageAdapter.createDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, createDummyDocument());
-      assertThat(hBaseStorageAdapter.collectionHasDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, mongoDbStorageDialect.documentIdFilter(id))).isTrue();
+      assertThat(hBaseStorageAdapter.collectionHasDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(id))).isTrue();
 
       String dummyId = "507f191e810c19729de860ea";
-      assertThat(hBaseStorageAdapter.collectionHasDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, mongoDbStorageDialect.documentIdFilter(dummyId))).isFalse();
+      assertThat(hBaseStorageAdapter.collectionHasDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(dummyId))).isFalse();
    }
-//
-//   @Test
-//   public void testCreateAndReadDocument() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_CREATE_AND_READ_DOCUMENT);
-//
-//      DataDocument insertedDocument = createDummyDocument();
-//      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_CREATE_AND_READ_DOCUMENT, insertedDocument);
-//
-//      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_CREATE_AND_READ_DOCUMENT, mongoDbStorageDialect.documentIdFilter(documentId));
-//      assertThat(insertedDocument.getString(DUMMY_KEY1)).isEqualTo(readedDocument.getString(DUMMY_KEY1));
-//      assertThat(insertedDocument.getString(DUMMY_KEY2)).isEqualTo(readedDocument.getString(DUMMY_KEY2));
-//   }
+
+   @Test
+   public void testCreateAndReadDocument() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_CREATE_AND_READ_DOCUMENT);
+
+      DataDocument insertedDocument = createDummyDocument();
+      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_CREATE_AND_READ_DOCUMENT, insertedDocument);
+
+      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_CREATE_AND_READ_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(documentId));
+      assertThat(insertedDocument.getString(DUMMY_KEY1)).isEqualTo(readedDocument.getString(DUMMY_KEY1));
+      assertThat(insertedDocument.getString(DUMMY_KEY2)).isEqualTo(readedDocument.getString(DUMMY_KEY2));
+   }
 //
 //   @Test
 //   public void testCreateDocuments() throws Exception {

@@ -14,7 +14,12 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.AggregationClient;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+
+
 
 import java.io.IOException;
 import java.util.*;
@@ -112,7 +117,7 @@ public class HBaseStorage{
     public void createTable(final String tableName) throws IOException {
         HTableDescriptor desc = new HTableDescriptor(toBytes(tableName));
 
-        desc.addFamily(new HColumnDescriptor(toBytes(DEFAULT_FAMILY)));
+        desc.addFamily(new HColumnDescriptor(toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY)));
         if (collectionsCache != null) {
             collectionsCache.lock(COLLECTION_CACHE);
             try {
@@ -187,8 +192,15 @@ public class HBaseStorage{
 
     
     public boolean tableHasDocument(TableName tableName, DataFilter filter) throws IOException {
-        //return admin.getCollection(collectionName).find(filter.<Bson>get()).limit(1).iterator().hasNext();
-        return false;
+        Filter firstOnlyFilter = new FirstKeyOnlyFilter();
+        FilterList filterList = new FilterList();
+        filterList.addFilter(firstOnlyFilter);
+        filterList.addFilter((Filter) filter.get());
+        Scan scan = new Scan();
+        scan.setFilter(filterList);
+        Table table = connection.getTable(tableName);
+        ResultScanner scanner = table.getScanner(scan);
+        return scanner.next() != null;
     }
 
     //How to adapt document?
@@ -201,7 +213,7 @@ public class HBaseStorage{
         for (Map.Entry<String, Object> entry : document.entrySet()) {
 //            writter.writeObject(entry.getValue());
 //            put.add(Bytes.toBytes("data"), Bytes.toBytes(entry.getKey()), baos.toByteArray());
-            put.addColumn(Bytes.toBytes("data"), Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
+            put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
 
         }
         table.put(put);
@@ -227,8 +239,17 @@ public class HBaseStorage{
     }
 
     
-    public DataDocument readDocument(String collectionName, DataFilter filter) {
-        return null;
+    public DataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
+        Filter firstOnlyFilter = new FirstKeyOnlyFilter();
+        FilterList filterList = new FilterList();
+        filterList.addFilter(firstOnlyFilter);
+        filterList.addFilter((Filter) filter.get());
+        Scan scan = new Scan();
+        scan.setFilter(filterList);
+        Table table = connection.getTable(tableName);
+        ResultScanner scanner = table.getScanner(scan);
+        Map map = scanner.next().getNoVersionMap();
+        return new DataDocument(map);
     }
 
     

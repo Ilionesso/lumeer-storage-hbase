@@ -113,6 +113,11 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public boolean collectionHasDocument(String collectionName, DataFilter filter) {
+        try {
+            return hBaseStorage.tableHasDocument(TableName.valueOf(collectionName), filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -143,6 +148,11 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public DataDocument readDocument(String collectionName, DataFilter filter) {
+        try {
+            return hBaseStorage.readDocument(TableName.valueOf(collectionName), filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

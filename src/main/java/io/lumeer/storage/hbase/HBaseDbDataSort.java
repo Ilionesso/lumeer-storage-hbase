@@ -18,20 +18,15 @@
  */
 package io.lumeer.storage.hbase;
 
+import io.lumeer.engine.api.data.DataSort;
+
 /**
  * @author <a href="alica.kacengova@gmail.com">Alica Kačengová</a>
  */
-//public class HBaseDbDataSort implements DataSort {
-//   private final Bson sort;
-//
-//   HBaseDbDataSort(final Bson sort) {
-//      this.sort = sort;
-//
-//   }
-//
-//   @Override
-//   @SuppressWarnings("unchecked")
-//   public Bson get() {
-//      return sort;
-//   }
-//}
+public class HBaseDbDataSort implements DataSort {
+
+    @Override
+    public <T> T get() {
+        return null;
+    }
+}

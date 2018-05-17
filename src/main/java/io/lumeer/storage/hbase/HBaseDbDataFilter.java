@@ -18,21 +18,23 @@
  */
 package io.lumeer.storage.hbase;
 
+import io.lumeer.engine.api.data.DataFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+
 /**
  * @author <a href="mailto:marvenec@gmail.com">Martin Večeřa</a>
  */
-//public class HBaseDbDataFilter implements DataFilter {
-//
-//   private final Bson filter;
-//
-//   HBaseDbDataFilter(final Bson filter) {
-//      this.filter = filter;
-//
-//   }
-//
-//   @Override
-//   @SuppressWarnings("unchecked")
-//   public Bson get() {
-//      return filter;
-//   }
-//}
+public class HBaseDbDataFilter implements DataFilter {
+
+    private final Filter filter;
+
+    public HBaseDbDataFilter(Filter filter) {
+        this.filter = filter;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Filter get() {
+        return this.filter;
+    }
+}

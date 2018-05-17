@@ -18,6 +18,7 @@
  */
 
 import com.google.protobuf.ServiceException;
+import io.lumeer.storage.hbase.HBaseDbStorageDialect;
 import io.lumeer.storage.hbase.HBaseStorageAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Admin;
@@ -34,6 +35,7 @@ public abstract class HbaseDbTestBase {
 
    private static EmbeddedHbaseDb embeddedHbaseDb;
    protected static HBaseStorageAdapter hBaseStorageAdapter;
+   protected static HBaseDbStorageDialect hBaseDbStorageDialect;
 
    private Configuration config;
    private Admin admin;
@@ -51,6 +53,7 @@ public abstract class HbaseDbTestBase {
       embeddedHbaseDb.start();
       hBaseStorageAdapter = new HBaseStorageAdapter();
       hBaseStorageAdapter.connect();
+      hBaseDbStorageDialect = new HBaseDbStorageDialect();
    }
 
    @AfterClass
