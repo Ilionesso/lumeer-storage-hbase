@@ -19,7 +19,9 @@
 package io.lumeer.storage.hbase;
 
 import io.lumeer.engine.api.data.DataDocument;
+import org.apache.commons.lang.SerializationUtils;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Timestamp;
@@ -44,6 +46,13 @@ public class HbaseUtils {
       }
    }
 
+   public static byte[] toBytes(Object object) {
+      return SerializationUtils.serialize((Serializable) object);
+   }
+
+   public static Object deserialize(byte[] bytes) {
+      return SerializationUtils.deserialize(bytes);
+   }
 
 //   public static DataDocument convertDocument(Document document) {
 //      MongoUtils.replaceId(document);

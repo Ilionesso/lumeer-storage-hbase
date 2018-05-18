@@ -57,7 +57,7 @@ public class EmbeddedHbaseDb {
 
    public void stop() throws IOException {
       if (admin != null){
-         admin.shutdown();
+//         admin.shutdown();
          admin.close();
       }
    }

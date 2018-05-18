@@ -90,7 +90,7 @@ public class HBaseDbStorageDialect implements DataStorageDialect {
                 Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY),
                 Bytes.toBytes(LumeerConst.Document.ID),
                 CompareFilter.CompareOp.EQUAL,
-                Bytes.toBytes(documentId)
+                HbaseUtils.toBytes(documentId)
         );
         return new HBaseDbDataFilter(filter);
     }

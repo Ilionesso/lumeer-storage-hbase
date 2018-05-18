@@ -5,21 +5,17 @@ import io.lumeer.engine.api.cache.Cache;
 import io.lumeer.engine.api.cache.CacheProvider;
 import io.lumeer.engine.api.data.*;
 import io.lumeer.engine.api.data.Query;
+import io.lumeer.engine.api.exception.DocumentNotFoundException;
 import io.lumeer.engine.api.exception.UnsuccessfulOperationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.coprocessor.AggregationClient;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-
-
 
 import java.io.IOException;
 import java.util.*;
@@ -203,18 +199,13 @@ public class HBaseStorage{
         return scanner.next() != null;
     }
 
-    //How to adapt document?
+
     public String createDocument(TableName tableName, DataDocument document) throws IOException {
         if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
         Table table = connection.getTable(tableName);
         Put put = new Put(Bytes.toBytes(document.getId()));
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        ObjectOutputStream writter = new ObjectOutputStream(baos);
         for (Map.Entry<String, Object> entry : document.entrySet()) {
-//            writter.writeObject(entry.getValue());
-//            put.add(Bytes.toBytes("data"), Bytes.toBytes(entry.getKey()), baos.toByteArray());
-            put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), Bytes.toBytes(entry.getValue().toString()));
-
+            put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), HbaseUtils.toBytes(entry.getValue()));
         }
         table.put(put);
         table.close();
@@ -222,10 +213,41 @@ public class HBaseStorage{
     }
 
 
+//    /**
+//     * Lazy/DRY
+//     * @param tableName
+//     * @param dataDocuments
+//     * @return
+//     * @throws IOException
+//     */
+//    public List<String> createDocuments(TableName tableName, List<DataDocument> dataDocuments) throws IOException {
+//        List<String> ids = new LinkedList<>();
+//        for (DataDocument doc :dataDocuments){
+//            ids.add(createDocument(tableName, doc));
+//        }
+//        return null;
+//    }
 
-    //Foreach?
-    public List<String> createDocuments(String collectionName, List<DataDocument> dataDocuments) {
-        return null;
+    /**
+     * Not lazy/DRY?
+     * @param tableName
+     * @param dataDocuments
+     * @return
+     * @throws IOException
+     */
+    public List<String> createDocuments(TableName tableName, List<DataDocument> dataDocuments) throws IOException {
+        List<String> ids = new LinkedList<>();
+        Table table = connection.getTable(tableName);
+        for (DataDocument document :dataDocuments){
+            if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
+            Put put = new Put(Bytes.toBytes(document.getId()));
+            for (Map.Entry<String, Object> entry : document.entrySet()) {
+                put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), HbaseUtils.toBytes(entry.getValue()));
+            }
+            table.put(put);
+            ids.add(createDocument(tableName, document));
+        }
+        return ids;
     }
 
     //Versions?
@@ -238,18 +260,35 @@ public class HBaseStorage{
         return null;
     }
 
+    private String getQualifierFromCell(Cell cell){
+        return Bytes.toString(CellUtil.cloneQualifier(cell));
+    }
+
+    private Object getValueFromCell(Cell cell){
+        return HbaseUtils.deserialize(CellUtil.cloneValue(cell));
+    }
+
     
     public DataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
-        Filter firstOnlyFilter = new FirstKeyOnlyFilter();
         FilterList filterList = new FilterList();
-        filterList.addFilter(firstOnlyFilter);
         filterList.addFilter((Filter) filter.get());
         Scan scan = new Scan();
         scan.setFilter(filterList);
         Table table = connection.getTable(tableName);
         ResultScanner scanner = table.getScanner(scan);
-        Map map = scanner.next().getNoVersionMap();
-        return new DataDocument(map);
+        Result res = scanner.next();
+        if (res == null) throw new DocumentNotFoundException(tableName + " " + filter);
+        Map<String, Object> docMap = Arrays.stream(res.rawCells()).
+                collect(Collectors.toMap(this::getQualifierFromCell, this::getValueFromCell));
+//        for (Result res : scanner) {
+//            Arrays.stream(res.rawCells()).forEach(cell -> {
+//                byte[] column = CellUtil.cloneQualifier(cell);
+//                byte[] value = CellUtil.cloneValue(cell);
+//                System.out.println(Bytes.toString(column));
+//                System.out.println(HbaseUtils.deserialize(value).toString());
+//            });
+//        }
+        return new HBaseDataDocument(docMap);
     }
 
     
@@ -321,8 +360,25 @@ public class HBaseStorage{
     }
 
     
-    public List<DataDocument> search(String collectionName, DataFilter filter, DataSort sort, int skip, int limit) {
-        return null;
+    public List<DataDocument> search(TableName tableName, DataFilter filter, DataSort sort, int skip, int limit) throws IOException {
+        Scan scan = new Scan();
+        if (filter != null) {
+            FilterList filterList = new FilterList();
+            filterList.addFilter((Filter) filter.get());
+            scan.setFilter(filterList);
+        }
+        if (limit > 0) scan.setLimit(0);
+        //TODO SKIP
+        //TODO SORT
+        Table table = connection.getTable(tableName);
+        ResultScanner scanner = table.getScanner(scan);
+        LinkedList<DataDocument> documents = new LinkedList<>();
+        for (Result res : scanner) {
+            Map<String, Object> docMap = Arrays.stream(res.rawCells()).
+                    collect(Collectors.toMap(this::getQualifierFromCell, this::getValueFromCell));
+            documents.add(new HBaseDataDocument(docMap));
+        }
+        return documents;
     }
 
     

@@ -133,6 +133,11 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public List<String> createDocuments(String collectionName, List<DataDocument> dataDocuments) {
+        try {
+            return hBaseStorage.createDocuments(TableName.valueOf(collectionName), dataDocuments);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -228,6 +233,11 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public List<DataDocument> search(String collectionName, DataFilter filter, DataSort sort, int skip, int limit) {
+        try {
+            return hBaseStorage.search(TableName.valueOf(collectionName), filter, sort, skip, limit);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 

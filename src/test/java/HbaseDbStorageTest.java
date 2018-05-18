@@ -21,6 +21,10 @@ import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.data.DataDocument;
 import org.junit.Before;
 import org.junit.Test;
+import org.mortbay.log.Log;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -146,6 +150,7 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
       hBaseStorageAdapter.createCollection(COLLECTION_COLLECTION_HAS_DOCUMENT);
 
       String id = hBaseStorageAdapter.createDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, createDummyDocument());
+      Log.info("Created doc info"+id);
       assertThat(hBaseStorageAdapter.collectionHasDocument(COLLECTION_COLLECTION_HAS_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(id))).isTrue();
 
       String dummyId = "507f191e810c19729de860ea";
@@ -163,25 +168,25 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
       assertThat(insertedDocument.getString(DUMMY_KEY1)).isEqualTo(readedDocument.getString(DUMMY_KEY1));
       assertThat(insertedDocument.getString(DUMMY_KEY2)).isEqualTo(readedDocument.getString(DUMMY_KEY2));
    }
-//
-//   @Test
-//   public void testCreateDocuments() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_CREATE_DOCUMENTS);
-//
-//      List<DataDocument> documents = new LinkedList<>();
-//      documents.add(new DataDocument("a", "a").append("b", "a"));
-//      documents.add(new DataDocument("a", "a").append("b", "b"));
-//      documents.add(new DataDocument("a", "a").append("b", "c"));
-//      documents.add(new DataDocument("a", "a").append("b", "d"));
-//      documents.add(new DataDocument("a", "a").append("b", "a"));
-//
-//      List<String> ids = hBaseStorageAdapter.createDocuments(COLLECTION_CREATE_DOCUMENTS, documents);
-//      assertThat(ids).hasSize(5);
-//
-//      List<DataDocument> search = hBaseStorageAdapter.search(COLLECTION_CREATE_DOCUMENTS, null, null, 0, 0);
-//      assertThat(search).hasSize(5);
-//   }
-//
+
+   @Test
+   public void testCreateDocuments() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_CREATE_DOCUMENTS);
+
+      List<DataDocument> documents = new LinkedList<>();
+      documents.add(new DataDocument("a", "a").append("b", "a"));
+      documents.add(new DataDocument("a", "a").append("b", "b"));
+      documents.add(new DataDocument("a", "a").append("b", "c"));
+      documents.add(new DataDocument("a", "a").append("b", "d"));
+      documents.add(new DataDocument("a", "a").append("b", "a"));
+
+      List<String> ids = hBaseStorageAdapter.createDocuments(COLLECTION_CREATE_DOCUMENTS, documents);
+      assertThat(ids).hasSize(5);
+
+      List<DataDocument> search = hBaseStorageAdapter.search(COLLECTION_CREATE_DOCUMENTS, null, null, 0, 0);
+      assertThat(search).hasSize(5);
+   }
+
 //   @Test
 //   public void testCreateDocumentsWithException() throws Exception {
 //      hBaseStorageAdapter.createCollection(COLLECTION_CREATE_DOCUMENTS_EXCEPTION);
@@ -194,7 +199,7 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 //      documents.add(new DataDocument("a", "a").append("b", "d"));
 //      documents.add(new DataDocument("a", "a").append("b", "a"));
 //
-//      assertThatThrownBy(() -> hBaseStorageAdapter.createDocuments(COLLECTION_CREATE_DOCUMENTS_EXCEPTION, documents)).isInstanceOf(MongoBulkWriteException.class);
+//      hBaseStorageAdapter.createDocuments(COLLECTION_CREATE_DOCUMENTS_EXCEPTION, documents);
 //      List<DataDocument> search = hBaseStorageAdapter.search(COLLECTION_CREATE_DOCUMENTS_EXCEPTION, null, null, 0, 0);
 //      assertThat(search).hasSize(4);
 //   }
