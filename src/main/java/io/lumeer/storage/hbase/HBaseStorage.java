@@ -1,11 +1,11 @@
 package io.lumeer.storage.hbase;
 
 import com.google.protobuf.ServiceException;
+import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.cache.Cache;
 import io.lumeer.engine.api.cache.CacheProvider;
 import io.lumeer.engine.api.data.*;
 import io.lumeer.engine.api.data.Query;
-import io.lumeer.engine.api.exception.DocumentNotFoundException;
 import io.lumeer.engine.api.exception.UnsuccessfulOperationException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -38,6 +38,7 @@ public class HBaseStorage{
     private AggregationClient aggregationClient;
 
 
+
     //Cache things
 
     private Cache<List<String>> collectionsCache;
@@ -54,9 +55,8 @@ public class HBaseStorage{
         this.collectionsCache = cacheProvider.getCache(COLLECTION_CACHE);
     }
 
-    // Implementation
+    //CONNECTING
 
-    //CHECK
     public void connect() throws IOException, ServiceException {
         config = HBaseConfiguration.create();
 
@@ -71,7 +71,6 @@ public class HBaseStorage{
         HBaseAdmin.checkHBaseAvailable(config);
     }
 
-    //CHECK
     public void disconnect() throws IOException {
         if (admin != null) {
             admin.shutdown();
@@ -109,7 +108,6 @@ public class HBaseStorage{
         return connection.getTable(tableName);
     }
 
-    //CHECK
     public void createTable(final String tableName) throws IOException {
         HTableDescriptor desc = new HTableDescriptor(toBytes(tableName));
 
@@ -196,17 +194,31 @@ public class HBaseStorage{
         scan.setFilter(filterList);
         Table table = connection.getTable(tableName);
         ResultScanner scanner = table.getScanner(scan);
+        table.close();
         return scanner.next() != null;
+    }
+
+    private Put makePutFromDataDocument(DataDocument document){
+        Put put = new Put(Bytes.toBytes(document.getId()));
+        return addValuesToPut(put, document);
+    }
+
+    private Put makePutFromDataDocument(DataDocument document, String id){
+        Put put = new Put(Bytes.toBytes(id));
+        return addValuesToPut(put, document);
+    }
+
+    private Put addValuesToPut(Put put, DataDocument document){
+        for (Map.Entry<String, Object> entry : document.entrySet())
+            put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), HbaseUtils.toBytes(entry.getValue()));
+        return put;
     }
 
 
     public String createDocument(TableName tableName, DataDocument document) throws IOException {
         if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
         Table table = connection.getTable(tableName);
-        Put put = new Put(Bytes.toBytes(document.getId()));
-        for (Map.Entry<String, Object> entry : document.entrySet()) {
-            put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), HbaseUtils.toBytes(entry.getValue()));
-        }
+        Put put = makePutFromDataDocument(document);
         table.put(put);
         table.close();
         return document.getId();
@@ -240,13 +252,11 @@ public class HBaseStorage{
         Table table = connection.getTable(tableName);
         for (DataDocument document :dataDocuments){
             if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
-            Put put = new Put(Bytes.toBytes(document.getId()));
-            for (Map.Entry<String, Object> entry : document.entrySet()) {
-                put.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(entry.getKey()), HbaseUtils.toBytes(entry.getValue()));
-            }
+            Put put = makePutFromDataDocument(document);
             table.put(put);
             ids.add(createDocument(tableName, document));
         }
+        table.close();
         return ids;
     }
 
@@ -268,16 +278,19 @@ public class HBaseStorage{
         return HbaseUtils.deserialize(CellUtil.cloneValue(cell));
     }
 
-    
-    public DataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
+    private ResultScanner scan(TableName tableName, DataFilter filter) throws IOException {
         FilterList filterList = new FilterList();
         filterList.addFilter((Filter) filter.get());
         Scan scan = new Scan();
         scan.setFilter(filterList);
         Table table = connection.getTable(tableName);
-        ResultScanner scanner = table.getScanner(scan);
+        return table.getScanner(scan);
+    }
+
+    public DataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
+        ResultScanner scanner = scan(tableName, filter);
         Result res = scanner.next();
-        if (res == null) throw new DocumentNotFoundException(tableName + " " + filter);
+        if (res == null) return null;
         Map<String, Object> docMap = Arrays.stream(res.rawCells()).
                 collect(Collectors.toMap(this::getQualifierFromCell, this::getValueFromCell));
 //        for (Result res : scanner) {
@@ -291,18 +304,44 @@ public class HBaseStorage{
         return new HBaseDataDocument(docMap);
     }
 
-    
-    public void updateDocument(String collectionName, DataDocument updatedDocument, DataFilter filter) {
-
+    private void put(TableName tableName, Put put) throws IOException {
+        Table table = connection.getTable(tableName);
+        table.put(put);
+        table.close();
     }
 
-    
-    public void replaceDocument(String collectionName, DataDocument replaceDocument, DataFilter filter) {
-
+    //Inject scan and do not make damn documents
+    public void updateDocument(TableName tableName, DataDocument update, DataFilter filter) throws IOException {
+        if (update.containsKey(LumeerConst.Document.ID))
+            update.remove(LumeerConst.Document.ID);
+        DataDocument toUpdate = readDocument(tableName, filter);
+        Put put = makePutFromDataDocument(update, toUpdate.getId());
+        put(tableName, put);
     }
 
-    public void dropDocument(String collectionName, DataFilter filter) {
+    public void replaceDocument(TableName tableName, DataDocument replaceDocument, DataFilter filter) throws IOException {
+        if (replaceDocument.containsKey(LumeerConst.Document.ID))
+            replaceDocument.remove(LumeerConst.Document.ID);
+        ResultScanner results = scan(tableName, filter);
+        Result toReplace = results.next();
+        if (toReplace == null) return;
+        dropRow(tableName, toReplace.getRow());
+        Put put = makePutFromDataDocument(replaceDocument, HbaseUtils.getResultId(toReplace));
+        put(tableName, put);
+    }
 
+    public void dropDocument(TableName tableName, DataFilter filter) throws IOException {
+        ResultScanner results = scan(tableName, filter);
+        Result toDelete = results.next();
+        if (toDelete == null) return;
+        dropRow(tableName, toDelete.getRow());
+    }
+
+    private void dropRow(TableName tableName, byte[] row) throws IOException {
+        Delete delete = new Delete(row);
+        Table table = connection.getTable(tableName);
+        table.delete(delete);
+        table.close();
     }
 
     public void dropManyDocuments(String collectionName, DataFilter filter) {

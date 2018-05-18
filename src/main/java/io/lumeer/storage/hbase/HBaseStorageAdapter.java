@@ -163,17 +163,29 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public void updateDocument(String collectionName, DataDocument updatedDocument, DataFilter filter) {
-
+        try {
+            hBaseStorage.updateDocument(TableName.valueOf(collectionName), updatedDocument, filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void replaceDocument(String collectionName, DataDocument replaceDocument, DataFilter filter) {
-
+        try {
+            hBaseStorage.replaceDocument(TableName.valueOf(collectionName), replaceDocument, filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void dropDocument(String collectionName, DataFilter filter) {
-
+        try {
+            hBaseStorage.dropDocument(TableName.valueOf(collectionName), filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@
 
 import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.data.DataDocument;
+import io.lumeer.engine.api.data.DataFilter;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mortbay.log.Log;
@@ -220,68 +222,68 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 //      assertThat(readDocument).isNull();
 //   }
 //
-//   @Test
-//   public void testUpdateDocument() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_UPDATE_DOCUMENT);
-//
-//      DataDocument insertedDocument = createDummyDocument();
-//      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_UPDATE_DOCUMENT, insertedDocument);
-//
-//      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_UPDATE_DOCUMENT, mongoDbStorageDialect.documentIdFilter(documentId));
-//      changeDummyDocumentValues(readedDocument);
-//      readedDocument.put(LumeerConst.Document.METADATA_VERSION_KEY, 1);
-//
-//      hBaseStorageAdapter.updateDocument(COLLECTION_UPDATE_DOCUMENT, readedDocument, mongoDbStorageDialect.documentIdFilter(documentId));
-//      DataDocument readedAfterInsDocument = hBaseStorageAdapter.readDocument(COLLECTION_UPDATE_DOCUMENT, mongoDbStorageDialect.documentIdFilter(documentId));
-//
-//      SoftAssertions assertions = new SoftAssertions();
-//      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY1)).isNotEqualTo(DUMMY_VALUE1);
-//      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY2)).isNotEqualTo(DUMMY_VALUE2);
-//      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY1)).isEqualTo(DUMMY_CHANGED_VALUE1);
-//      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY2)).isEqualTo(DUMMY_CHANGED_VALUE2);
-//      assertions.assertThat(readedAfterInsDocument.getInteger(LumeerConst.Document.METADATA_VERSION_KEY)).isEqualTo(1);
-//      assertions.assertAll();
-//   }
-//
-//   @Test
-//   public void testReplaceDocument() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_REPLACE_DOCUMENT);
-//
-//      DataDocument insertedDocument = new DataDocument("a", 1).append("b", 2).append("c", 3);
-//      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_REPLACE_DOCUMENT, insertedDocument);
-//      final DataFilter documentIdFilter = mongoDbStorageDialect.documentIdFilter(documentId);
-//
-//      DataDocument replaceDocument = new DataDocument("d", 4).append("e", 5).append("f", 6);
-//      hBaseStorageAdapter.replaceDocument(COLLECTION_REPLACE_DOCUMENT, replaceDocument, documentIdFilter);
-//
-//      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_REPLACE_DOCUMENT, documentIdFilter);
-//
-//      SoftAssertions assertions = new SoftAssertions();
-//      assertions.assertThat(readedDocument.containsKey("a")).as("a").isFalse();
-//      assertions.assertThat(readedDocument.containsKey("b")).as("b").isFalse();
-//      assertions.assertThat(readedDocument.containsKey("c")).as("c").isFalse();
-//      assertions.assertThat(readedDocument.containsKey("d")).as("d").isTrue();
-//      assertions.assertThat(readedDocument.containsKey("e")).as("e").isTrue();
-//      assertions.assertThat(readedDocument.containsKey("f")).as("f").isTrue();
-//      assertions.assertAll();
-//   }
-//
-//   @Test
-//   public void testDropDocument() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_DROP_DOCUMENT);
-//
-//      DataDocument insertedDocument = createDummyDocument();
-//      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_DROP_DOCUMENT, insertedDocument);
-//      final DataFilter documentIdFilter = mongoDbStorageDialect.documentIdFilter(documentId);
-//      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
-//
-//      assertThat(readedDocument).isNotNull();
-//
-//      hBaseStorageAdapter.dropDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
-//      readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
-//
-//      assertThat(readedDocument).isNull();
-//   }
+   @Test
+   public void testUpdateDocument() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_UPDATE_DOCUMENT);
+
+      DataDocument insertedDocument = createDummyDocument();
+      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_UPDATE_DOCUMENT, insertedDocument);
+
+      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_UPDATE_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(documentId));
+      changeDummyDocumentValues(readedDocument);
+      readedDocument.put(LumeerConst.Document.METADATA_VERSION_KEY, 1);
+
+      hBaseStorageAdapter.updateDocument(COLLECTION_UPDATE_DOCUMENT, readedDocument, hBaseDbStorageDialect.documentIdFilter(documentId));
+      DataDocument readedAfterInsDocument = hBaseStorageAdapter.readDocument(COLLECTION_UPDATE_DOCUMENT, hBaseDbStorageDialect.documentIdFilter(documentId));
+
+      SoftAssertions assertions = new SoftAssertions();
+      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY1)).isNotEqualTo(DUMMY_VALUE1);
+      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY2)).isNotEqualTo(DUMMY_VALUE2);
+      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY1)).isEqualTo(DUMMY_CHANGED_VALUE1);
+      assertions.assertThat(readedAfterInsDocument.getString(DUMMY_KEY2)).isEqualTo(DUMMY_CHANGED_VALUE2);
+      assertions.assertThat(readedAfterInsDocument.getInteger(LumeerConst.Document.METADATA_VERSION_KEY)).isEqualTo(1);
+      assertions.assertAll();
+   }
+
+   @Test
+   public void testReplaceDocument() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_REPLACE_DOCUMENT);
+
+      DataDocument insertedDocument = new DataDocument("a", 1).append("b", 2).append("c", 3);
+      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_REPLACE_DOCUMENT, insertedDocument);
+      final DataFilter documentIdFilter = hBaseDbStorageDialect.documentIdFilter(documentId);
+
+      DataDocument replaceDocument = new DataDocument("d", 4).append("e", 5).append("f", 6);
+      hBaseStorageAdapter.replaceDocument(COLLECTION_REPLACE_DOCUMENT, replaceDocument, documentIdFilter);
+
+      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_REPLACE_DOCUMENT, documentIdFilter);
+
+      SoftAssertions assertions = new SoftAssertions();
+      assertions.assertThat(readedDocument.containsKey("a")).as("a").isFalse();
+      assertions.assertThat(readedDocument.containsKey("b")).as("b").isFalse();
+      assertions.assertThat(readedDocument.containsKey("c")).as("c").isFalse();
+      assertions.assertThat(readedDocument.containsKey("d")).as("d").isTrue();
+      assertions.assertThat(readedDocument.containsKey("e")).as("e").isTrue();
+      assertions.assertThat(readedDocument.containsKey("f")).as("f").isTrue();
+      assertions.assertAll();
+   }
+
+   @Test
+   public void testDropDocument() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_DROP_DOCUMENT);
+
+      DataDocument insertedDocument = createDummyDocument();
+      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_DROP_DOCUMENT, insertedDocument);
+      final DataFilter documentIdFilter = hBaseDbStorageDialect.documentIdFilter(documentId);
+      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
+
+      assertThat(readedDocument).isNotNull();
+
+      hBaseStorageAdapter.dropDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
+      readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_DOCUMENT, documentIdFilter);
+
+      assertThat(readedDocument).isNull();
+   }
 //
 //   @Test
 //   public void testDropManyDocuments() throws Exception {

@@ -18,8 +18,11 @@
  */
 package io.lumeer.storage.hbase;
 
+import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.data.DataDocument;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -52,6 +55,10 @@ public class HbaseUtils {
 
    public static Object deserialize(byte[] bytes) {
       return SerializationUtils.deserialize(bytes);
+   }
+
+   public static String getResultId(Result result){
+      return (String) deserialize(result.getValue(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(LumeerConst.Document.ID)));
    }
 
 //   public static DataDocument convertDocument(Document document) {
