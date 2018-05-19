@@ -280,14 +280,15 @@ public class HBaseStorage{
 
     private ResultScanner scan(TableName tableName, DataFilter filter) throws IOException {
         FilterList filterList = new FilterList();
-        filterList.addFilter((Filter) filter.get());
+        if (filter != null)
+            filterList.addFilter((Filter) filter.get());
         Scan scan = new Scan();
         scan.setFilter(filterList);
         Table table = connection.getTable(tableName);
         return table.getScanner(scan);
     }
 
-    public DataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
+    public HBaseDataDocument readDocument(TableName tableName, DataFilter filter) throws IOException {
         ResultScanner scanner = scan(tableName, filter);
         Result res = scanner.next();
         if (res == null) return null;
@@ -325,42 +326,82 @@ public class HBaseStorage{
         ResultScanner results = scan(tableName, filter);
         Result toReplace = results.next();
         if (toReplace == null) return;
-        dropRow(tableName, toReplace.getRow());
+        deleteRow(tableName, toReplace.getRow());
         Put put = makePutFromDataDocument(replaceDocument, HbaseUtils.getResultId(toReplace));
         put(tableName, put);
     }
 
-    public void dropDocument(TableName tableName, DataFilter filter) throws IOException {
+    public void deleteDocument(TableName tableName, DataFilter filter) throws IOException {
         ResultScanner results = scan(tableName, filter);
         Result toDelete = results.next();
         if (toDelete == null) return;
-        dropRow(tableName, toDelete.getRow());
+        deleteRow(tableName, toDelete.getRow());
     }
 
-    private void dropRow(TableName tableName, byte[] row) throws IOException {
-        Delete delete = new Delete(row);
+    private void deleteRow(TableName tableName, byte[] row) throws IOException {
+        Delete toDelete = new Delete(row);
         Table table = connection.getTable(tableName);
-        table.delete(delete);
+        table.delete(toDelete);
         table.close();
     }
 
-    public void dropManyDocuments(String collectionName, DataFilter filter) {
+    private void deleteList(TableName tableName, List<Delete> toDelete) throws IOException {
+        if (toDelete.size() == 0) return;
+        Table table = connection.getTable(tableName);
+        table.delete(toDelete);
+        table.close();
+    }
 
+    private void putList(TableName tableName, List<Put> toPut) throws IOException {
+        if (toPut.size() == 0) return;
+        Table table = connection.getTable(tableName);
+        table.put(toPut);
+        table.close();
+    }
+
+    public void deleteManyDocuments(TableName tableName, DataFilter filter) throws IOException {
+        ResultScanner results = scan(tableName, filter);
+        List<Delete> toDeleteList = new ArrayList<>();
+        for (Result result : results)
+            toDeleteList.add(new Delete(result.getRow()));
+        deleteList(tableName, toDeleteList);
     }
 
     
-    public void renameAttribute(String collectionName, String oldName, String newName) {
-
+    public void renameQualifier(TableName tableName, String oldName, String newName) throws IOException {
+        ResultScanner results = scan(tableName, null);
+        List<Put> toPutList = new ArrayList<>();
+        List<Delete> toDeleteList = new ArrayList<>();
+        for (Result result : results){
+            Put toPut = new Put(result.getRow());
+            Delete toDelete = new Delete(result.getRow());
+            byte[] value = result.getValue(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(oldName));
+            toPut.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(newName), value);
+            toDelete.addColumn(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(oldName));
+            toPutList.add(toPut);
+            toDeleteList.add(toDelete);
+        }
+        deleteList(tableName, toDeleteList);
+        putList(tableName, toPutList);
     }
 
     
-    public void dropAttribute(String collectionName, DataFilter filter, String attributeName) {
-
+    public void dropQualifier(TableName tableName, DataFilter filter, String qualifierName) throws IOException {
+        ResultScanner results = scan(tableName, filter);
+        List<Delete> toDeleteList = new ArrayList<>();
+        for (Result result : results){
+            Delete toDelete = new Delete(result.getRow());
+            toDelete.addColumns(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(qualifierName));
+            toDeleteList.add(toDelete);
+        }
+        deleteList(tableName, toDeleteList);
     }
 
     
-    public <T> void addItemToArray(String collectionName, DataFilter filter, String attributeName, T item) {
-
+    public <T> void addItemToArray(TableName tableName, DataFilter filter, String qualifierName, T item) throws IOException {
+//       DataDocument doc = readDocument(tableName, filter);
+//       List<T> list = new LinkedList<T>();
+//       doc.getArrayList(qualifierName, T);
     }
 
     
@@ -406,7 +447,7 @@ public class HBaseStorage{
             filterList.addFilter((Filter) filter.get());
             scan.setFilter(filterList);
         }
-        if (limit > 0) scan.setLimit(0);
+        if (limit > 0) scan.setLimit(limit);
         //TODO SKIP
         //TODO SORT
         Table table = connection.getTable(tableName);

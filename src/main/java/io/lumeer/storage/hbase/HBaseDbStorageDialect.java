@@ -56,7 +56,13 @@ public class HBaseDbStorageDialect implements DataStorageDialect {
 
     @Override
     public DataFilter fieldValueFilter(String fieldName, Object value) {
-        return null;
+        SingleColumnValueFilter filter = new SingleColumnValueFilter(
+                Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY),
+                Bytes.toBytes(fieldName),
+                CompareFilter.CompareOp.EQUAL,
+                HbaseUtils.toBytes(value)
+        );
+        return new HBaseDbDataFilter(filter);
     }
 
     @Override
@@ -86,13 +92,7 @@ public class HBaseDbStorageDialect implements DataStorageDialect {
 
     @Override
     public DataFilter documentIdFilter(String documentId) {
-        SingleColumnValueFilter filter = new SingleColumnValueFilter(
-                Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY),
-                Bytes.toBytes(LumeerConst.Document.ID),
-                CompareFilter.CompareOp.EQUAL,
-                HbaseUtils.toBytes(documentId)
-        );
-        return new HBaseDbDataFilter(filter);
+        return fieldValueFilter(LumeerConst.Document.ID, documentId);
     }
 
     @Override

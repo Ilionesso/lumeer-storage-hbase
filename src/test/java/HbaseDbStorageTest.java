@@ -30,6 +30,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+//TODO 17/37
+
 public class HbaseDbStorageTest extends HbaseDbTestBase {
 
    private final String DUMMY_KEY1 = "key1";
@@ -284,46 +286,46 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 
       assertThat(readedDocument).isNull();
    }
-//
-//   @Test
-//   public void testDropManyDocuments() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_DROP_MANY);
-//
-//      String dropManyKey = "dropManyKey";
-//      String value1 = "v1";
-//      String value2 = "v2";
-//      for (int i = 0; i < 100; i++) {
-//         DataDocument insertedDocument = createDummyDocument();
-//         insertedDocument.put(dropManyKey, i % 2 == 0 ? value1 : value2);
-//         hBaseStorageAdapter.createDocument(COLLECTION_DROP_MANY, insertedDocument);
-//      }
-//
-//      List<DataDocument> docs = hBaseStorageAdapter.search(COLLECTION_DROP_MANY, null, null, 0, 0);
-//      assertThat(docs).hasSize(100);
-//
-//      hBaseStorageAdapter.dropManyDocuments(COLLECTION_DROP_MANY, mongoDbStorageDialect.fieldValueFilter(dropManyKey, value1));
-//
-//      docs = hBaseStorageAdapter.search(COLLECTION_DROP_MANY, null, null, 0, 0);
-//      assertThat(docs).hasSize(50);
-//   }
-//
-//   @Test
-//   public void testDropAttribute() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_DROP_ATTRIBUTE);
-//
-//      DataDocument insertedDocument = createDummyDocument();
-//      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_DROP_ATTRIBUTE, insertedDocument);
-//      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_ATTRIBUTE, mongoDbStorageDialect.documentIdFilter(documentId));
-//      assertThat(readedDocument).hasSize(4);
-//
-//      final DataFilter documentIdFilter = mongoDbStorageDialect.documentIdFilter(documentId);
-//
-//      hBaseStorageAdapter.dropAttribute(COLLECTION_DROP_ATTRIBUTE, documentIdFilter, DUMMY_KEY1);
-//
-//      readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_ATTRIBUTE, documentIdFilter);
-//      assertThat(readedDocument).hasSize(3);
-//   }
-//
+
+   @Test
+   public void testDropManyDocuments() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_DROP_MANY);
+
+      String dropManyKey = "dropManyKey";
+      String value1 = "v1";
+      String value2 = "v2";
+      for (int i = 0; i < 100; i++) {
+         DataDocument insertedDocument = createDummyDocument();
+         insertedDocument.put(dropManyKey, i % 2 == 0 ? value1 : value2);
+         hBaseStorageAdapter.createDocument(COLLECTION_DROP_MANY, insertedDocument);
+      }
+
+      List<DataDocument> docs = hBaseStorageAdapter.search(COLLECTION_DROP_MANY, null, null, 0, 0);
+      assertThat(docs).hasSize(100);
+
+      hBaseStorageAdapter.dropManyDocuments(COLLECTION_DROP_MANY, hBaseDbStorageDialect.fieldValueFilter(dropManyKey, value1));
+
+      docs = hBaseStorageAdapter.search(COLLECTION_DROP_MANY, null, null, 0, 0);
+      assertThat(docs).hasSize(50);
+   }
+
+   @Test
+   public void testDropAttribute() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_DROP_ATTRIBUTE);
+
+      DataDocument insertedDocument = createDummyDocument();
+      String documentId = hBaseStorageAdapter.createDocument(COLLECTION_DROP_ATTRIBUTE, insertedDocument);
+      DataDocument readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_ATTRIBUTE, hBaseDbStorageDialect.documentIdFilter(documentId));
+      assertThat(readedDocument).hasSize(4);
+
+      final DataFilter documentIdFilter = hBaseDbStorageDialect.documentIdFilter(documentId);
+
+      hBaseStorageAdapter.dropAttribute(COLLECTION_DROP_ATTRIBUTE, documentIdFilter, DUMMY_KEY1);
+
+      readedDocument = hBaseStorageAdapter.readDocument(COLLECTION_DROP_ATTRIBUTE, documentIdFilter);
+      assertThat(readedDocument).hasSize(3);
+   }
+
 //   @Test
 //   public void testIndexes() throws Exception {
 //      hBaseStorageAdapter.createCollection(COLLECTION_INDEXES);
@@ -374,19 +376,19 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 //      assertThat(anyDoc).doesNotContainKeys("a", "e", "f");
 //   }
 //
-//   @Test
-//   public void testSearch() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_SEARCH);
-//
-//      for (int i = 0; i < 100; i++) {
-//         DataDocument insertedDocument = createDummyDocument();
-//         hBaseStorageAdapter.createDocument(COLLECTION_SEARCH, insertedDocument);
-//      }
-//
-//      List<DataDocument> searchDocuments = hBaseStorageAdapter.search(COLLECTION_SEARCH, null, null, 10, 10);
-//      assertThat(searchDocuments).hasSize(10);
-//   }
-//
+   @Test
+   public void testSearch() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_SEARCH);
+
+      for (int i = 0; i < 100; i++) {
+         DataDocument insertedDocument = createDummyDocument();
+         hBaseStorageAdapter.createDocument(COLLECTION_SEARCH, insertedDocument);
+      }
+
+      List<DataDocument> searchDocuments = hBaseStorageAdapter.search(COLLECTION_SEARCH, null, null, 10, 10);
+      assertThat(searchDocuments).hasSize(10);
+   }
+
 //   @Test
 //   public void testSearchWithProjection() {
 //      hBaseStorageAdapter.createCollection(COLLECTION_SEARCH_PROJECTION);
@@ -418,20 +420,20 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 //      assertThat(searchDocuments).hasSize(101);
 //   }
 //
-//   @Test
-//   public void testRenameAttribute() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_RENAME_ATTRIBUTE);
-//
-//      DataDocument insertedDocument = createDummyDocument();
-//      String id = hBaseStorageAdapter.createDocument(COLLECTION_RENAME_ATTRIBUTE, insertedDocument);
-//
-//      String changedAttr = "changed_" + DUMMY_KEY1;
-//      hBaseStorageAdapter.renameAttribute(COLLECTION_RENAME_ATTRIBUTE, DUMMY_KEY1, changedAttr);
-//
-//      DataDocument document = hBaseStorageAdapter.readDocument(COLLECTION_RENAME_ATTRIBUTE, mongoDbStorageDialect.documentIdFilter(id));
-//      assertThat(document.containsKey(DUMMY_KEY1)).isFalse();
-//      assertThat(document.containsKey(changedAttr)).isTrue();
-//   }
+   @Test
+   public void testRenameAttribute() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_RENAME_ATTRIBUTE);
+
+      DataDocument insertedDocument = createDummyDocument();
+      String id = hBaseStorageAdapter.createDocument(COLLECTION_RENAME_ATTRIBUTE, insertedDocument);
+
+      String changedAttr = "changed_" + DUMMY_KEY1;
+      hBaseStorageAdapter.renameAttribute(COLLECTION_RENAME_ATTRIBUTE, DUMMY_KEY1, changedAttr);
+
+      DataDocument document = hBaseStorageAdapter.readDocument(COLLECTION_RENAME_ATTRIBUTE, hBaseDbStorageDialect.documentIdFilter(id));
+      assertThat(document.containsKey(DUMMY_KEY1)).isFalse();
+      assertThat(document.containsKey(changedAttr)).isTrue();
+   }
 //
 //   @Test
 //   public void testIncrementAttributeValueBy() throws Exception {

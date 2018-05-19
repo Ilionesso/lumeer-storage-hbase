@@ -182,7 +182,7 @@ public class HBaseStorageAdapter implements DataStorage{
     @Override
     public void dropDocument(String collectionName, DataFilter filter) {
         try {
-            hBaseStorage.dropDocument(TableName.valueOf(collectionName), filter);
+            hBaseStorage.deleteDocument(TableName.valueOf(collectionName), filter);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -190,17 +190,29 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public void dropManyDocuments(String collectionName, DataFilter filter) {
-
+        try {
+            hBaseStorage.deleteManyDocuments(TableName.valueOf(collectionName), filter);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void renameAttribute(String collectionName, String oldName, String newName) {
-
+        try {
+            hBaseStorage.renameQualifier(TableName.valueOf(collectionName), oldName, newName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void dropAttribute(String collectionName, DataFilter filter, String attributeName) {
-
+        try {
+            hBaseStorage.dropQualifier(TableName.valueOf(collectionName), filter, attributeName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
