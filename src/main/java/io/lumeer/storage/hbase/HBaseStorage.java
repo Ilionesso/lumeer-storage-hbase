@@ -397,26 +397,52 @@ public class HBaseStorage{
         deleteList(tableName, toDeleteList);
     }
 
-    
     public <T> void addItemToArray(TableName tableName, DataFilter filter, String qualifierName, T item) throws IOException {
-//       DataDocument doc = readDocument(tableName, filter);
-//       List<T> list = new LinkedList<T>();
-//       doc.getArrayList(qualifierName, T);
+        manipulateItemFromArray(tableName, filter, qualifierName, item,  Operation.PUT);
     }
 
-    
-    public <T> void addItemsToArray(String collectionName, DataFilter filter, String attributeName, List<T> items) {
-
+    public <T> void removeItemFromArray(TableName tableName, DataFilter filter, String qualifierName, T item) throws IOException {
+        manipulateItemFromArray(tableName, filter, qualifierName, item,  Operation.DELETE);
     }
 
-    
-    public <T> void removeItemFromArray(String collectionName, DataFilter filter, String attributeName, T item) {
+    private <T> void manipulateItemFromArray(TableName tableName, DataFilter filter, String qualifierName, T item, Operation operation) throws IOException {
+        HBaseDataDocument dataDocument = readDocument(tableName, filter);
+        ArrayList updatedItems = dataDocument.getArrayList(qualifierName, item.getClass());
+        switch (operation){
+            case PUT:
+                updatedItems.add(item);
+                break;
+            case DELETE:
+                updatedItems.remove(item);
 
+        }
+        dataDocument.put(qualifierName, updatedItems);
+        updateDocument(tableName, dataDocument, filter);
     }
 
-    
-    public <T> void removeItemsFromArray(String collectionName, DataFilter filter, String attributeName, List<T> items) {
+    public <T> void addItemsToArray(TableName tableName, DataFilter filter, String qualifierName, List<T> items) throws IOException {
+        manipulateItemsFromArray(tableName, filter, qualifierName, items, Operation.PUT);
+    }
 
+    public <T> void removeItemsFromArray(TableName tableName, DataFilter filter, String qualifierName, List<T> items) throws IOException {
+        manipulateItemsFromArray(tableName, filter, qualifierName, items, Operation.DELETE);
+    }
+
+    private <T> void manipulateItemsFromArray(TableName tableName, DataFilter filter, String qualifierName, List<T> items, Operation operation) throws IOException {
+        HBaseDataDocument dataDocument = readDocument(tableName, filter);
+        if (items.size() == 0) return;
+        Class cl = items.get(0).getClass();
+        ArrayList updatedItems = dataDocument.getArrayList(qualifierName, cl);
+        switch (operation){
+            case PUT:
+                updatedItems.addAll(items);
+                break;
+            case DELETE:
+                updatedItems.removeAll(items);
+                break;
+        }
+        dataDocument.put(qualifierName, updatedItems);
+        updateDocument(tableName, dataDocument, filter);
     }
 
     
@@ -535,5 +561,7 @@ public class HBaseStorage{
     public Object getDataStore() {
         return null;
     }
+
+    private enum Operation {PUT, DELETE}
 
 }

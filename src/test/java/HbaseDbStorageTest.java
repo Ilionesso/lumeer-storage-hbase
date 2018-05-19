@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mortbay.log.Log;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -532,81 +533,81 @@ public class HbaseDbStorageTest extends HbaseDbTestBase {
 //      assertThat(nested).isNotNull();
 //   }
 //
-//   @Test
-//   public void testBasicArrayManipulation() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_BASIC_ARRAY_MANIPULATION);
-//
-//      DataDocument doc = createDummyDocument();
-//      doc.put("a", Arrays.asList(1, 2, 3, 4));
-//
-//      String id = hBaseStorageAdapter.createDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, doc);
-//      final DataFilter documentIdFilter = mongoDbStorageDialect.documentIdFilter(id);
-//      DataDocument fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(4);
-//
-//      hBaseStorageAdapter.addItemToArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", 10);
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(5);
-//
-//      hBaseStorageAdapter.addItemsToArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", Arrays.asList(5, 6, 7));
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(8);
-//
-//      hBaseStorageAdapter.removeItemFromArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", 10);
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(7);
-//
-//      hBaseStorageAdapter.removeItemsFromArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", Arrays.asList(5, 6, 7));
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(4);
-//   }
-//
-//   @Test
-//   public void testComplexArrayManipulation() throws Exception {
-//      hBaseStorageAdapter.createCollection(COLLECTION_COMPLEX_ARRAY_MANIPULATION);
-//
-//      DataDocument d = createDummyDocument();
-//      DataDocument n = createDummyDocument();
-//
-//      DataDocument d1 = new DataDocument();
-//      d1.put("gt", 10);
-//      DataDocument d2 = new DataDocument();
-//      d2.put("lt", 20);
-//      n.put("a", Arrays.asList(d1, d2));
-//      d.put("n", n);
-//
-//      String id = hBaseStorageAdapter.createDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, d);
-//      final DataFilter documentIdFilter = mongoDbStorageDialect.documentIdFilter(id);
-//      DataDocument fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(2);
-//
-//      DataDocument d3 = new DataDocument();
-//      d3.put("equals", "true");
-//      hBaseStorageAdapter.addItemToArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d3);
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
-//
-//      DataDocument d4 = new DataDocument();
-//      d4.put("i", true);
-//      DataDocument d5 = new DataDocument();
-//      d4.put("p", 12.3);
-//      hBaseStorageAdapter.addItemsToArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", Arrays.asList(d4, d5));
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(5);
-//
-//      hBaseStorageAdapter.removeItemsFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", Arrays.asList(d2, d3));
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
-//
-//      hBaseStorageAdapter.removeItemFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d2);
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
-//
-//      hBaseStorageAdapter.removeItemFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d4);
-//      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
-//      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(2);
-//
-//   }
+   @Test
+   public void testBasicArrayManipulation() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_BASIC_ARRAY_MANIPULATION);
+
+      DataDocument doc = createDummyDocument();
+      doc.put("a", Arrays.asList(1, 2, 3, 4));
+
+      String id = hBaseStorageAdapter.createDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, doc);
+      final DataFilter documentIdFilter = hBaseDbStorageDialect.documentIdFilter(id);
+      DataDocument fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(4);
+
+      hBaseStorageAdapter.addItemToArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", 10);
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(5);
+
+      hBaseStorageAdapter.addItemsToArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", Arrays.asList(5, 6, 7));
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(8);
+
+      hBaseStorageAdapter.removeItemFromArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", 10);
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(7);
+
+      hBaseStorageAdapter.removeItemsFromArray(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter, "a", Arrays.asList(5, 6, 7));
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_BASIC_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("a", Integer.class)).hasSize(4);
+   }
+
+   @Test
+   public void testComplexArrayManipulation() throws Exception {
+      hBaseStorageAdapter.createCollection(COLLECTION_COMPLEX_ARRAY_MANIPULATION);
+
+      DataDocument d = createDummyDocument();
+      DataDocument n = createDummyDocument();
+
+      DataDocument d1 = new DataDocument();
+      d1.put("gt", 10);
+      DataDocument d2 = new DataDocument();
+      d2.put("lt", 20);
+      n.put("a", Arrays.asList(d1, d2));
+      d.put("n", n);
+
+      String id = hBaseStorageAdapter.createDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, d);
+      final DataFilter documentIdFilter = hBaseDbStorageDialect.documentIdFilter(id);
+      DataDocument fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(2);
+
+      DataDocument d3 = new DataDocument();
+      d3.put("equals", "true");
+      hBaseStorageAdapter.addItemToArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d3);
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
+
+      DataDocument d4 = new DataDocument();
+      d4.put("i", true);
+      DataDocument d5 = new DataDocument();
+      d4.put("p", 12.3);
+      hBaseStorageAdapter.addItemsToArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", Arrays.asList(d4, d5));
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(5);
+
+      hBaseStorageAdapter.removeItemsFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", Arrays.asList(d2, d3));
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
+
+      hBaseStorageAdapter.removeItemFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d2);
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(3);
+
+      hBaseStorageAdapter.removeItemFromArray(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter, "n.a", d4);
+      fromDb = hBaseStorageAdapter.readDocument(COLLECTION_COMPLEX_ARRAY_MANIPULATION, documentIdFilter);
+      assertThat(fromDb.getArrayList("n.a", DataDocument.class)).hasSize(2);
+
+   }
 //
 //   public void testAggregate() {
 //      hBaseStorageAdapter.createCollection(COLLECTION_AGGREGATE);

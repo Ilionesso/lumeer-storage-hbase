@@ -3,10 +3,7 @@ package io.lumeer.storage.hbase;
 import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.data.DataDocument;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Ilia Sheiko on 17/05/2018.
@@ -24,8 +21,6 @@ public class HBaseDataDocument extends DataDocument{
     public HBaseDataDocument(final Map<String, Object> data) {
         super(data);
     }
-
-
 
     public HBaseDataDocument(final String key, final Object value) {
         super();
@@ -254,13 +249,30 @@ public class HBaseDataDocument extends DataDocument{
      * @throws java.lang.NullPointerException
      *       if key nested path is not valid
      */
+//    public <T> ArrayList<T> getArrayList(final String key, final Class<T> cl) {
+//        List<T> l = (List<T>) getObject(key);
+//        ArrayList<T> list = new ArrayList<T>(l);
+//        if (list.size()>0) return list;
+//        return new ArrayList<T>();
+//    }
+//
+//    public <T> ArrayList<T> getArrayList(final String key) {
+//        List<T> l = (List<T>) getObject(key);
+//        ArrayList<T> list = new ArrayList<T>(l);
+//        if (list.size()>0) return list;
+//        return new ArrayList<T>();
+//    }
+
+
     public <T> ArrayList<T> getArrayList(final String key, final Class<T> cl) {
         List l = (List) getObject(key);
         if (l != null) {
             if (l.isEmpty()) {
                 return new ArrayList<T>();
             } else if (l.get(0).getClass() == cl) {
-                return (ArrayList<T>) l;
+                ArrayList<T> list = new ArrayList<>();
+                list.addAll(l);
+                return list;
             }
         }
         return new ArrayList<T>();

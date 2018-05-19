@@ -217,22 +217,38 @@ public class HBaseStorageAdapter implements DataStorage{
 
     @Override
     public <T> void addItemToArray(String collectionName, DataFilter filter, String attributeName, T item) {
-
+        try {
+            hBaseStorage.addItemToArray(TableName.valueOf(collectionName), filter, attributeName, item);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public <T> void addItemsToArray(String collectionName, DataFilter filter, String attributeName, List<T> items) {
-
+        try {
+            hBaseStorage.addItemsToArray(TableName.valueOf(collectionName), filter, attributeName, items);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public <T> void removeItemFromArray(String collectionName, DataFilter filter, String attributeName, T item) {
-
+        try {
+            hBaseStorage.removeItemFromArray(TableName.valueOf(collectionName), filter, attributeName, item);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public <T> void removeItemsFromArray(String collectionName, DataFilter filter, String attributeName, List<T> items) {
-
+        try {
+            hBaseStorage.removeItemsFromArray(TableName.valueOf(collectionName), filter, attributeName, items);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
