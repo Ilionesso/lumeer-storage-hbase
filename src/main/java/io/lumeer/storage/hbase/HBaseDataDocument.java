@@ -37,7 +37,17 @@ public class HBaseDataDocument extends DataDocument{
      * @return Instance of this.
      */
     public DataDocument append(final String key, final Object value) {
-        put(key, value);
+        if (key.contains(KEY_SEPARATOR)){
+            String[] splitKey = key.split("\\"+KEY_SEPARATOR);
+            String docKey = Arrays.toString(Arrays.copyOfRange(splitKey, 1, splitKey.length)).replace(",", ".").replace(" ", "").replace("[", "").replace("]", "");
+            put(splitKey[0], getDataDocument(splitKey[0]).append(docKey, value));
+        }
+        else put(key, value);
+//        String[] splittedKey = key.split(".");
+//        if (splittedKey.length == 1)
+//            put(key, value);
+//        else if (splittedKey.length > 1)
+//            getDataDocument(splittedKey[0]).append(Arrays.copyOfRange(splittedKey, 1, splittedKey.length).toString().replace(",", "").replace(" ", ""), value);
         return this;
     }
 
@@ -337,7 +347,15 @@ public class HBaseDataDocument extends DataDocument{
             return false;
         }
 
-        if (compared instanceof DataDocument) {
+        if (compared instanceof HBaseDataDocument) {
+            HBaseDataDocument comparedDoc = (HBaseDataDocument) compared;
+            if (this.getId() == null && comparedDoc.getId() == null)
+                return true;
+            return this.getId().equals(comparedDoc.getId());
+
+        }
+
+        else if (compared instanceof DataDocument) {
             DataDocument comparedDoc = (DataDocument) compared;
 
             if (this.getId() == null && comparedDoc.getId() == null) {
@@ -346,6 +364,10 @@ public class HBaseDataDocument extends DataDocument{
 
             return this.getId().equals(comparedDoc.getId());
         }
+
+
+
+
 
         return false;
     }
@@ -356,4 +378,6 @@ public class HBaseDataDocument extends DataDocument{
         this.forEach((key, value) -> result.append(key).append(": ").append(value).append(", "));
         return result.toString();
     }
+
+
 }

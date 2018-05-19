@@ -1,7 +1,6 @@
 package io.lumeer.storage.hbase;
 
 import com.google.protobuf.ServiceException;
-import io.lumeer.engine.api.LumeerConst;
 import io.lumeer.engine.api.cache.Cache;
 import io.lumeer.engine.api.cache.CacheProvider;
 import io.lumeer.engine.api.data.*;
@@ -214,15 +213,41 @@ public class HBaseStorage{
         return put;
     }
 
+    public DataDocument generateIds(DataDocument document){
+//        if (document == null) document = this;
+        if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
+        for (Map.Entry<String, Object> entry : document.entrySet()){
+            if (entry.getValue() instanceof DataDocument)
+                document.put(entry.getKey(), generateIds((DataDocument) entry.getValue()));
+            else if (entry.getValue() instanceof ArrayList)
+                document.put(entry.getKey(), tryToGenerateArrayIds((ArrayList) entry.getValue()));
+        }
+        return document;
+    }
+
+    public ArrayList tryToGenerateArrayIds(ArrayList array){
+        if (array.size() == 0) return array;
+        for (int i = 0; i < array.size(); i++) {
+            if (array.get(i) instanceof DataDocument) {
+                DataDocument document = (DataDocument) array.get(i);
+                array.set(i, generateIds(document));
+            } else if (array.get(i) instanceof ArrayList) {
+                ArrayList list = (ArrayList) array.get(i);
+                array.set(i, tryToGenerateArrayIds(list));
+            }
+        }
+        return array;
+    }
 
     public String createDocument(TableName tableName, DataDocument document) throws IOException {
-        if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
+        document = generateIds(document);
         Table table = connection.getTable(tableName);
         Put put = makePutFromDataDocument(document);
         table.put(put);
         table.close();
         return document.getId();
     }
+
 
 
 //    /**
@@ -250,8 +275,8 @@ public class HBaseStorage{
     public List<String> createDocuments(TableName tableName, List<DataDocument> dataDocuments) throws IOException {
         List<String> ids = new LinkedList<>();
         Table table = connection.getTable(tableName);
-        for (DataDocument document :dataDocuments){
-            if (document.getId() == null) document.setId(HBaseUtilsOld.generateUniqueId(""));
+        for (DataDocument document : dataDocuments){
+            document = generateIds(document);
             Put put = makePutFromDataDocument(document);
             table.put(put);
             ids.add(createDocument(tableName, document));
@@ -313,16 +338,14 @@ public class HBaseStorage{
 
     //Inject scan and do not make damn documents
     public void updateDocument(TableName tableName, DataDocument update, DataFilter filter) throws IOException {
-        if (update.containsKey(LumeerConst.Document.ID))
-            update.remove(LumeerConst.Document.ID);
         DataDocument toUpdate = readDocument(tableName, filter);
+        update = generateIds(update);
         Put put = makePutFromDataDocument(update, toUpdate.getId());
         put(tableName, put);
     }
 
     public void replaceDocument(TableName tableName, DataDocument replaceDocument, DataFilter filter) throws IOException {
-        if (replaceDocument.containsKey(LumeerConst.Document.ID))
-            replaceDocument.remove(LumeerConst.Document.ID);
+        replaceDocument = generateIds(replaceDocument);
         ResultScanner results = scan(tableName, filter);
         Result toReplace = results.next();
         if (toReplace == null) return;
@@ -407,16 +430,17 @@ public class HBaseStorage{
 
     private <T> void manipulateItemFromArray(TableName tableName, DataFilter filter, String qualifierName, T item, Operation operation) throws IOException {
         HBaseDataDocument dataDocument = readDocument(tableName, filter);
-        ArrayList updatedItems = dataDocument.getArrayList(qualifierName, item.getClass());
+        ArrayList<T> updatedItems = dataDocument.getArrayList(qualifierName, (Class<T>) item.getClass());
         switch (operation){
             case PUT:
                 updatedItems.add(item);
                 break;
             case DELETE:
-                updatedItems.remove(item);
-
+                int index = updatedItems.indexOf(item);
+                updatedItems.remove(index);
+                break;
         }
-        dataDocument.put(qualifierName, updatedItems);
+        dataDocument.append(qualifierName, updatedItems);
         updateDocument(tableName, dataDocument, filter);
     }
 
@@ -432,16 +456,16 @@ public class HBaseStorage{
         HBaseDataDocument dataDocument = readDocument(tableName, filter);
         if (items.size() == 0) return;
         Class cl = items.get(0).getClass();
-        ArrayList updatedItems = dataDocument.getArrayList(qualifierName, cl);
+        ArrayList<T> updatedItems = dataDocument.getArrayList(qualifierName, cl);
         switch (operation){
             case PUT:
-                updatedItems.addAll(items);
+                items.forEach(item ->updatedItems.add(item));
                 break;
             case DELETE:
-                updatedItems.removeAll(items);
+                items.forEach(item ->updatedItems.remove(item));
                 break;
         }
-        dataDocument.put(qualifierName, updatedItems);
+        dataDocument.append(qualifierName, updatedItems);
         updateDocument(tableName, dataDocument, filter);
     }
 

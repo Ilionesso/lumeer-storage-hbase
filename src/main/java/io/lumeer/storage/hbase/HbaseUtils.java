@@ -61,6 +61,7 @@ public class HbaseUtils {
       return (String) deserialize(result.getValue(Bytes.toBytes(HBaseConstants.DEFAULT_COLUMN_FAMILY), Bytes.toBytes(LumeerConst.Document.ID)));
    }
 
+
 //   public static DataDocument convertDocument(Document document) {
 //      MongoUtils.replaceId(document);
 //      DataDocument dataDocument = new DataDocument(document);
