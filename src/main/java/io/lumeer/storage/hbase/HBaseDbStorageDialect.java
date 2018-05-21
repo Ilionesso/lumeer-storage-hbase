@@ -67,7 +67,7 @@ public class HBaseDbStorageDialect implements DataStorageDialect {
 
     @Override
     public DataFilter fieldValueWildcardFilter(String fieldName, Object valuePart) {
-        return null;
+        return fieldValueFilter(fieldName, valuePart);
     }
 
     @Override
@@ -94,6 +94,8 @@ public class HBaseDbStorageDialect implements DataStorageDialect {
     public DataFilter documentIdFilter(String documentId) {
         return fieldValueFilter(LumeerConst.Document.ID, documentId);
     }
+
+
 
     @Override
     public DataFilter multipleFieldsValueFilter(Map<String, Object> fields) {

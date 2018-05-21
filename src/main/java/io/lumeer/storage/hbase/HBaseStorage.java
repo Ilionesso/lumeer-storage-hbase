@@ -35,6 +35,7 @@ public class HBaseStorage{
     private Admin admin;
     private Connection connection;
     private AggregationClient aggregationClient;
+    private HBaseDbStorageDialect hBaseDbStorageDialect;
 
 
 
@@ -58,6 +59,7 @@ public class HBaseStorage{
 
     public void connect() throws IOException, ServiceException {
         config = HBaseConfiguration.create();
+        hBaseDbStorageDialect = new HBaseDbStorageDialect();
 
         String path = this.getClass()
                 .getClassLoader()
@@ -330,18 +332,30 @@ public class HBaseStorage{
         return new HBaseDataDocument(docMap);
     }
 
+    public HBaseDataDocument readDocument(TableName tableName, String qualifier, Object value) throws IOException {
+        return readDocument(tableName, hBaseDbStorageDialect.fieldValueFilter(qualifier, value));
+    }
+
+    public HBaseDataDocument readDocument(TableName tableName, String id) throws IOException {
+        return readDocument(tableName, hBaseDbStorageDialect.documentIdFilter(id));
+    }
+
     private void put(TableName tableName, Put put) throws IOException {
         Table table = connection.getTable(tableName);
         table.put(put);
         table.close();
     }
 
-    //Inject scan and do not make damn documents
+    //Inject scan and do not make damn documents?
     public void updateDocument(TableName tableName, DataDocument update, DataFilter filter) throws IOException {
         DataDocument toUpdate = readDocument(tableName, filter);
         update = generateIds(update);
         Put put = makePutFromDataDocument(update, toUpdate.getId());
         put(tableName, put);
+    }
+
+    public void updateDocument(TableName tableName, DataDocument update) throws IOException {
+        updateDocument(tableName, update, hBaseDbStorageDialect.documentIdFilter(update.getId()));
     }
 
     public void replaceDocument(TableName tableName, DataDocument replaceDocument, DataFilter filter) throws IOException {
@@ -359,6 +373,10 @@ public class HBaseStorage{
         Result toDelete = results.next();
         if (toDelete == null) return;
         deleteRow(tableName, toDelete.getRow());
+    }
+
+    public void deleteDocument(TableName tableName, String id) throws IOException {
+        deleteDocument(tableName, hBaseDbStorageDialect.documentIdFilter(id));
     }
 
     private void deleteRow(TableName tableName, byte[] row) throws IOException {

@@ -1,4 +1,4 @@
-/*
+package io.lumeer.storage.hbase;/*
  * Lumeer: Modern Data Definition and Processing Platform
  *
  * Copyright (C) since 2017 Answer Institute, s.r.o. and/or its affiliates.

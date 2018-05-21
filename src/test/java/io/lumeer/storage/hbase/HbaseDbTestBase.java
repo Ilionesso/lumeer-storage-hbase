@@ -1,4 +1,4 @@
-/*
+package io.lumeer.storage.hbase;/*
  * Lumeer: Modern Data Definition and Processing Platform
  *
  * Copyright (C) since 2017 Answer Institute, s.r.o. and/or its affiliates.
@@ -17,9 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
 import com.google.protobuf.ServiceException;
-import io.lumeer.storage.hbase.HBaseDbStorageDialect;
-import io.lumeer.storage.hbase.HBaseStorageAdapter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
@@ -67,7 +67,7 @@ public abstract class HbaseDbTestBase {
    @Before
    public void connectMongoDbStorage() {
 
-//      database.drop();
+//      datastore.drop();
    }
 
    @After
